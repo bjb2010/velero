@@ -647,6 +647,7 @@ func (s *server) runControllers(defaultVolumeSnapshotLocations map[string]string
 			s.config.defaultVolumesToFsBackup,
 			s.config.clientPageSize,
 			s.config.uploaderType,
+			s.kubeClient.CoreV1().Namespaces(),
 		)
 		cmd.CheckError(err)
 

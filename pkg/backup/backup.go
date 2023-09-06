@@ -36,6 +36,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	kubeerrs "k8s.io/apimachinery/pkg/util/errors"
+	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	"github.com/vmware-tanzu/velero/internal/hook"
 	velerov1api "github.com/vmware-tanzu/velero/pkg/apis/velero/v1"
@@ -80,6 +81,7 @@ type kubernetesBackupper struct {
 	defaultVolumesToFsBackup  bool
 	clientPageSize            int
 	uploaderType              string
+	namespaceClient           corev1.NamespaceInterface
 }
 
 func (i *itemKey) String() string {
@@ -107,6 +109,7 @@ func NewKubernetesBackupper(
 	defaultVolumesToFsBackup bool,
 	clientPageSize int,
 	uploaderType string,
+	namespaceClient corev1.NamespaceInterface,
 ) (Backupper, error) {
 	return &kubernetesBackupper{
 		backupClient:              backupClient,
@@ -118,6 +121,7 @@ func NewKubernetesBackupper(
 		defaultVolumesToFsBackup:  defaultVolumesToFsBackup,
 		clientPageSize:            clientPageSize,
 		uploaderType:              uploaderType,
+		namespaceClient:           namespaceClient,
 	}, nil
 }
 
@@ -266,6 +270,7 @@ func (kb *kubernetesBackupper) BackupWithResolvers(log logrus.FieldLogger,
 		cohabitatingResources: cohabitatingResources(),
 		dir:                   tempDir,
 		pageSize:              kb.clientPageSize,
+		namespaceClient:       kb.namespaceClient,
 	}
 
 	items := collector.getAllItems()

@@ -32,6 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/pager"
 
 	"github.com/vmware-tanzu/velero/pkg/client"
@@ -50,6 +51,7 @@ type itemCollector struct {
 	cohabitatingResources map[string]*cohabitatingResource
 	dir                   string
 	pageSize              int
+	namespaceClient       corev1.NamespaceInterface
 }
 
 type kubernetesResource struct {
@@ -223,7 +225,7 @@ func (r *itemCollector) getResourceItems(log logrus.FieldLogger, gv schema.Group
 		}
 	}
 
-	namespacesToList := getNamespacesToList(r.backupRequest.NamespaceIncludesExcludes)
+	namespacesToList := r.getNamespacesToList(r.backupRequest.NamespaceIncludesExcludes)
 
 	// Check if we're backing up namespaces for a less-than-full backup.
 	// We enter this block if resource is Namespaces and the namespae list is either empty or contains
@@ -426,7 +428,7 @@ func coreGroupResourcePriority(resource string) int {
 // getNamespacesToList examines ie and resolves the includes and excludes to a full list of
 // namespaces to list. If ie is nil or it includes *, the result is just "" (list across all
 // namespaces). Otherwise, the result is a list of every included namespace minus all excluded ones.
-func getNamespacesToList(ie *collections.IncludesExcludes) []string {
+func (r *itemCollector) getNamespacesToList(ie *collections.IncludesExcludes) []string {
 	if ie == nil {
 		return []string{""}
 	}
@@ -436,10 +438,15 @@ func getNamespacesToList(ie *collections.IncludesExcludes) []string {
 		return []string{""}
 	}
 
+	namespaces, err := r.namespaceClient.List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil
+	}
+
 	var list []string
-	for _, i := range ie.GetIncludes() {
-		if ie.ShouldInclude(i) {
-			list = append(list, i)
+	for _, ns := range namespaces.Items {
+		if ie.ShouldInclude(ns.Name) {
+			list = append(list, ns.Name)
 		}
 	}
 
