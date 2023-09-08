@@ -37,6 +37,15 @@ func TestCreateOptions_BuildBackup(t *testing.T) {
 	o.OrderedResources = "pods=p1,p2;persistentvolumeclaims=pvc1,pvc2"
 	orders, err := ParseOrderedResources(o.OrderedResources)
 	o.CSISnapshotTimeout = 20 * time.Minute
+	orLabelSelectors := []*metav1.LabelSelector{
+		{
+			MatchLabels: map[string]string{"k1": "v1", "k2": "v2"},
+		},
+		{
+			MatchLabels: map[string]string{"a1": "b1", "a2": "b2"},
+		},
+	}
+	o.OrSelector.OrLabelSelectors = orLabelSelectors
 	assert.NoError(t, err)
 
 	backup, err := o.BuildBackup(testNamespace)
@@ -48,6 +57,7 @@ func TestCreateOptions_BuildBackup(t *testing.T) {
 		SnapshotVolumes:         o.SnapshotVolumes.Value,
 		IncludeClusterResources: o.IncludeClusterResources.Value,
 		OrderedResources:        orders,
+		OrLabelSelectors:        orLabelSelectors,
 		CSISnapshotTimeout:      metav1.Duration{Duration: o.CSISnapshotTimeout},
 	}, backup.Spec)
 

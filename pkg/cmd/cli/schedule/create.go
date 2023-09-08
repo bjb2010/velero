@@ -141,6 +141,7 @@ func (o *CreateOptions) Run(c *cobra.Command, f client.Factory) error {
 				ExcludedResources:        o.BackupOptions.ExcludeResources,
 				IncludeClusterResources:  o.BackupOptions.IncludeClusterResources.Value,
 				LabelSelector:            o.BackupOptions.Selector.LabelSelector,
+				OrLabelSelectors:         o.BackupOptions.OrSelector.OrLabelSelectors,
 				SnapshotVolumes:          o.BackupOptions.SnapshotVolumes.Value,
 				TTL:                      metav1.Duration{Duration: o.BackupOptions.TTL},
 				StorageLocation:          o.BackupOptions.StorageLocation,

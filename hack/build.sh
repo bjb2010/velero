@@ -79,6 +79,7 @@ fi
 go build \
     -o ${OUTPUT} \
     -gcflags "${GCFLAGS}" \
+    -buildvcs=false \
     -installsuffix "static" \
     -ldflags "${LDFLAGS}" \
     ${PKG}/cmd/${BIN}
